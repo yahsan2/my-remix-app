@@ -1,7 +1,10 @@
+import { supabase } from "~/utils/supabaseClient";
+import { Joke } from "@prisma/client";
 import type { MetaFunction, LoaderFunction } from "remix";
 import { useLoaderData, json, Link } from "remix";
 
 type IndexData = {
+  jokes: Joke[];
   resources: Array<{ name: string; url: string }>;
   demos: Array<{ name: string; to: string }>;
 };
@@ -10,8 +13,11 @@ type IndexData = {
 // you can connect to a database or run any server side code you want right next
 // to the component that renders it.
 // https://remix.run/api/conventions#loader
-export let loader: LoaderFunction = () => {
+export let loader: LoaderFunction = async () => {
+  const { data: jokes } = await supabase.from<Joke>("jokes").select("*");
+
   let data: IndexData = {
+    jokes: jokes || [],
     resources: [
       {
         name: "Remix Docs :D ",
@@ -76,6 +82,20 @@ export default function Index() {
         </p>
       </main>
       <aside>
+        <h2> Jokes In This App ?</h2>
+        {
+          <ul>
+            {data.jokes.map((joke) => (
+              <li key={joke.id}>
+                <div>
+                  <Link to={`/jokes/${joke.id}`}>
+                    {joke.name} | {joke.content}
+                  </Link>
+                </div>
+              </li>
+            ))}
+          </ul>
+        }
         <h2>Demos In This App</h2>
         <ul>
           {data.demos.map((demo) => (
